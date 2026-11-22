@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://dvoltty.github.io/dvoltty-creative-studio/sitemap.xml

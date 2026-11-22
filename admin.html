@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071a43"><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="assets/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css"><title>Studio Admin | DVOLTTY</title></head>
+<body class="admin-shell"><div class="admin-top"><strong>DVOLTTY / STUDIO ADMIN</strong><a href="index.html">← View website</a></div>
+<main class="admin-wrap">
+<div class="notice"><b>Important hosting limitation:</b> this is a browser-local management demo for GitHub Pages. It stores projects and follow-up records in this browser only. The public enquiry form sends customers to WhatsApp; it does not send submissions into this dashboard. The demo passcode is visible in the source and is NOT secure authentication. Connect a secure backend before using this for private customer data or multi-device administration.</div>
+<section class="login-box" id="login"><h2>Admin access</h2><p>Enter the demo passcode to open the local dashboard.</p><input id="pass" type="password" placeholder="Demo passcode" autocomplete="current-password"><button class="button button-gold" id="loginBtn">Open dashboard</button><p id="err" role="alert"></p><small>Demo passcode: <b>DvolttyDemo26</b> (change in source for a private preview only; not production security).</small></section>
+<div id="dash" class="admin-hidden">
+<section class="admin-panel"><h2>Studio overview</h2><div class="admin-stat-grid"><div class="admin-stat"><span class="admin-muted">Saved projects</span><strong id="projectCount">0</strong></div><div class="admin-stat"><span class="admin-muted">Follow-up records</span><strong id="noteCount">0</strong></div><div class="admin-stat"><span class="admin-muted">Storage</span><strong>Browser</strong></div></div></section>
+<section class="admin-panel"><h2 id="projectHeading">Add portfolio project</h2><form id="projectForm" class="admin-form">
+<input type="hidden" name="editId"><label>Project title<input name="title" required maxlength="90" placeholder="e.g. Brand identity concept"></label>
+<label>Category<select name="category"><option>Branding</option><option>Web design</option><option>Social content</option><option>Video editing</option><option>Photo editing</option></select></label>
+<label>Description<textarea name="description" required maxlength="500" rows="3" placeholder="What was created and what problem does it solve?"></textarea></label>
+<label>Image URL (optional)<input name="imageUrl" type="url" placeholder="https://..."></label>
+<label>Or upload an image (stored in this browser)<input name="imageFile" type="file" accept="image/*"></label>
+<div class="admin-actions"><button class="button button-gold" type="submit" id="saveProject">Save project</button><button class="button" type="button" id="cancelEdit">Clear</button></div>
+<p class="admin-muted">Tip: compress images before uploading. Browser storage is limited; large images may fail. Uploaded projects appear on the portfolio page in this same browser.</p></form></section>
+<section class="admin-panel"><h2>Saved portfolio projects</h2><div id="projects" class="admin-list"></div></section>
+<section class="admin-panel"><h2>Enquiry follow-up notebook</h2><p class="admin-muted">Add a record after a customer contacts you. This is a private local reminder list, not an automatic inbox.</p>
+<form id="noteForm" class="admin-form"><label>Customer name<input name="customer" required></label><label>WhatsApp / phone (optional)<input name="phone" type="tel"></label><label>Service<input name="service" placeholder="Website design, logo, etc."></label><label>Status<select name="status"><option>New</option><option>Contacted</option><option>Awaiting payment</option><option>In progress</option><option>Completed</option></select></label><label>Follow-up note<textarea name="note" rows="2" placeholder="Next action, quotation, due date..."></textarea></label><button class="button button-gold">Save follow-up</button></form><div id="notes" class="admin-list"></div></section>
+<section class="admin-panel"><h2>Backup & restore</h2><p class="admin-muted">Export your locally saved projects and follow-up notes to a JSON backup file. Restore a previous backup in this browser.</p><div class="admin-actions"><button class="button button-gold" id="exportData">Export backup</button><label class="button" for="importData">Import backup JSON</label><input id="importData" type="file" accept="application/json" hidden></div></section>
+</div></main>
+<script>
+const $=s=>document.querySelector(s),get=k=>{try{return JSON.parse(localStorage.getItem(k)||"[]")}catch{return[]}},put=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+$("#loginBtn").onclick=()=>{if($("#pass").value==="DvolttyDemo26"){$("#login").classList.add("admin-hidden");$("#dash").classList.remove("admin-hidden");render()}else $("#err").textContent="Incorrect passcode"};
+function safe(t){return String(t||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function render(){
+ const projects=get("dvolttyProjects"),notes=get("dvolttyNotes");
+ $("#projectCount").textContent=projects.length;$("#noteCount").textContent=notes.length;
+ const pb=$("#projects");pb.innerHTML="";
+ projects.forEach(x=>{const row=document.createElement("div");row.className="admin-row";const info=document.createElement("div");info.style.flex="1";info.innerHTML="<b>"+safe(x.title)+"</b><small>"+safe(x.category)+" · "+safe(x.description)+"</small>";
+ if(x.imageUrl){const im=document.createElement("img");im.src=x.imageUrl;im.alt="";im.style.cssText="width:88px;height:64px;object-fit:cover;border-radius:8px;margin-top:8px";info.append(im)}
+ const actions=document.createElement("div");actions.className="admin-actions";const edit=document.createElement("button");edit.textContent="Edit";edit.onclick=()=>editProject(x.id);const del=document.createElement("button");del.textContent="Delete";del.onclick=()=>{if(confirm("Delete this project?")){put("dvolttyProjects",get("dvolttyProjects").filter(p=>p.id!==x.id));render()}};actions.append(edit,del);row.append(info,actions);pb.append(row)});
+ const nb=$("#notes");nb.innerHTML="";
+ notes.forEach(x=>{const row=document.createElement("div");row.className="admin-row";const info=document.createElement("div");info.style.flex="1";info.innerHTML="<b>"+safe(x.customer)+"</b><small>"+safe(x.service)+" · "+safe(x.status)+" · "+safe(x.phone)+"<br>"+safe(x.note)+"</small>";
+ const del=document.createElement("button");del.textContent="Delete";del.onclick=()=>{put("dvolttyNotes",get("dvolttyNotes").filter(n=>n.id!==x.id));render()};row.append(info,del);nb.append(row)});
+}
+function clearProjectForm(){ $("#projectForm").reset();$("#projectForm [name=editId]").value="";$("#projectHeading").textContent="Add portfolio project";$("#saveProject").textContent="Save project"}
+function editProject(id){const x=get("dvolttyProjects").find(p=>p.id===id);if(!x)return;const f=$("#projectForm");f.elements.editId.value=x.id;f.elements.title.value=x.title;f.elements.category.value=x.category;f.elements.description.value=x.description;f.elements.imageUrl.value=x.imageUrl||"";$("#projectHeading").textContent="Edit portfolio project";$("#saveProject").textContent="Update project";window.scrollTo({top:0,behavior:"smooth"})}
+$("#cancelEdit").onclick=clearProjectForm;
+$("#projectForm").onsubmit=async e=>{e.preventDefault();const f=e.target,d=new FormData(f),id=d.get("editId"),all=get("dvolttyProjects"),old=all.find(x=>x.id===id);let imageUrl=(d.get("imageUrl")||"").trim();
+ const file=f.elements.imageFile.files[0];if(file){if(!file.type.startsWith("image/")){alert("Please choose an image file.");return}if(file.size>1200000){alert("Please use an image under 1.2 MB for browser storage.");return}imageUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}else if(!imageUrl&&old)imageUrl=old.imageUrl||"";
+ const item={id:id||uid(),title:d.get("title").trim(),category:d.get("category"),description:d.get("description").trim(),imageUrl};
+ if(id){const i=all.findIndex(x=>x.id===id);if(i>=0)all[i]=item}else all.unshift(item);
+ try{put("dvolttyProjects",all);clearProjectForm();render()}catch(err){alert("Browser storage is full. Try a smaller image or remove older projects.")}};
+$("#noteForm").onsubmit=e=>{e.preventDefault();const d=new FormData(e.target),a=get("dvolttyNotes");a.unshift({id:uid(),customer:d.get("customer"),phone:d.get("phone"),service:d.get("service"),status:d.get("status"),note:d.get("note"),createdAt:new Date().toISOString()});put("dvolttyNotes",a);e.target.reset();render()};
+$("#exportData").onclick=()=>{const blob=new Blob([JSON.stringify({projects:get("dvolttyProjects"),notes:get("dvolttyNotes")},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="dvoltty-admin-backup.json";a.click();URL.revokeObjectURL(a.href)};
+$("#importData").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const d=JSON.parse(await file.text());if(!Array.isArray(d.projects)||!Array.isArray(d.notes))throw Error();put("dvolttyProjects",d.projects);put("dvolttyNotes",d.notes);render();alert("Backup restored.")}catch{alert("That backup file is not valid.")}e.target.value=""};
+</script></body></html>
